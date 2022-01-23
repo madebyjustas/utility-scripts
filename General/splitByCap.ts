@@ -1,6 +1,11 @@
 // Exports
-export function splitByCap(str: string): string[] {
+export default function splitByCap(str: string): string[] {
   let words: any[] = [], word = -1;
+
+  if ((/^[a-z]/).test(str)) {
+    words.push([]);
+    word++;
+  }
 
   for (const char of str) {
     if ((/[A-Z]/).test(char)) {

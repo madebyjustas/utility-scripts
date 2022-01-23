@@ -45,7 +45,7 @@ function format(startingPath: string, file: Dirent, includeExt = false): FileObj
 }
 
 // Exports
-export async function crawlDirContent(path: string, config: Config) {
+export default async function crawlDirContent(path: string, config: Config) {
   const {
     includeExt = false, includeDirname = false
   } = config;
