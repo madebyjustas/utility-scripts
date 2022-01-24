@@ -131,7 +131,7 @@ export function showOnly(keys: StrOrStrArr) {
     return array.map((obj) => {
       const result = {};
 
-      (keys as string[]).forEach((key) => result[key] = obj[key])
+      (keys as string[]).forEach((key) => result[key] = obj[key]);
 
       return result;
     });
