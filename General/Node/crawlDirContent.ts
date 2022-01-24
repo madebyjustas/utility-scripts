@@ -125,8 +125,8 @@ export function filterByExt(exts: StrOrStrArr) {
 }
 
 export function showOnly(keys: StrOrStrArr) {
-  return filterTemplate.bind(null, keys, (array: StrOrFileArr) => {
-    return array.map((obj: string | FileObject) => obj[keys]);
+  return filterTemplate.bind(null, keys, (array: FileObject[]) => {
+    return array.map((obj) => obj[keys]);
   }, (array: FileObject[]) => {
     return array.map((obj) => {
       const result = {};
