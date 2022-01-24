@@ -1,12 +1,14 @@
-// Type Declarations
+// |==== Type Declarations ====|
+
+// Interfaces
 interface Config {
   includeExt?: boolean;
   includeDirname?: boolean;
 }
 
 interface FileObject {
-  path: string;
-  filename: string;
+  path?: string;
+  filename?: string;
   ext?: string | undefined | null;
   isDirectory?: boolean;
 }
@@ -15,6 +17,11 @@ interface TempContent {
   directories: FileObject[];
   files: FileObject[];
 }
+
+// Union Types
+type StrOrFileArr = string[] | FileObject[];
+
+type StrOrStrArr = string | string[];
 
 // Node API Imports
 import { readdir } from 'fs/promises';
@@ -44,7 +51,26 @@ function format(startingPath: string, file: Dirent, includeExt = false): FileObj
   return result;
 }
 
-// Exports
+function filterTemplate(
+  data: StrOrStrArr,
+  singleFn: (array: FileObject[]) => StrOrFileArr,
+  manyFn: (array: FileObject[]) => StrOrFileArr,
+  array: FileObject[]
+) {
+  let result: StrOrFileArr = array;
+
+  if (typeof data === 'string') {
+    result = singleFn(array);
+  } else if (Array.isArray(data) && data.length) {
+    result = manyFn(array);
+  }
+
+  return result;
+}
+
+// |==== Exports ====|
+
+// Main
 export default async function crawlDirContent(path: string, config: Config) {
   const {
     includeExt = false, includeDirname = false
@@ -76,4 +102,38 @@ export default async function crawlDirContent(path: string, config: Config) {
   await crawler(join(...pathArgs));
 
   return result;
+}
+
+// Filters
+export function filterByExt(exts: StrOrStrArr) {
+  return filterTemplate.bind(null, exts, (array: FileObject[]) => {
+    return array.filter((obj) =>
+      obj.ext === exts
+    );
+  }, (array: FileObject[]) => {
+    let result = [];
+
+    (exts as string[]).forEach((ext) => {
+      result = [
+        ...result,
+        ...array.filter((obj) => obj.ext === ext)
+      ];
+    });
+
+    return result;
+  });
+}
+
+export function showOnly(keys: StrOrStrArr) {
+  return filterTemplate.bind(null, keys, (array: StrOrFileArr) => {
+    return array.map((obj: string | FileObject) => obj[keys]);
+  }, (array: FileObject[]) => {
+    return array.map((obj) => {
+      const result = {};
+
+      (keys as string[]).forEach((key) => result[key] = obj[key])
+
+      return result;
+    });
+  });
 }
