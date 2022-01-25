@@ -1,6 +1,4 @@
-// |==== Type Declarations ====|
-
-// Interfaces
+// Type Declarations
 interface Config {
   includeExt?: boolean;
   includeDirname?: boolean;
@@ -17,11 +15,6 @@ interface TempContent {
   directories: FileObject[];
   files: FileObject[];
 }
-
-// Union Types
-type StrOrFileArr = string[] | FileObject[];
-
-type StrOrStrArr = string | string[];
 
 // Node API Imports
 import { readdir } from 'fs/promises';
@@ -88,39 +81,30 @@ export default async function crawlDirContent(path: string, config: Config) {
 }
 
 // Filters
-export function filterByExt(exts: StrOrStrArr) {
+export function filterByExt(...exts: string[]) {
   return function(array: FileObject[]) {
-    let result = array;
+    if (!exts.length) return array;
 
-    if (typeof exts === 'string') exts = [exts];
+    const regex = new RegExp(`^(?:${exts.join('|')})$`);
 
-    if (Array.isArray(exts) && exts.length) {
-      const regex = new RegExp(`^(?:${exts.join('|')})$`);
-      result = array.filter((obj) => regex.test(obj.ext));
-    }
-
-    return result;
+    return array.filter((obj) => regex.test(obj.ext));
   }
 }
 
-export function showOnly(keys: StrOrStrArr) {
+export function showOnly(...keys: string[]) {
   return function(array: FileObject[]) {
-    let result: StrOrFileArr = array;
+    if (!keys.length) return array;
 
-    if (typeof keys === 'string') keys = [keys];
-
-    if (Array.isArray(keys) && keys.length) {
-      result = array.map((obj) => {
-        const result = {};
-
-        (keys as string[]).forEach((key) =>
-          result[key] = obj[key]
-        );
-
-        return result;
-      });
+    if (keys.length === 1) {
+      return array.map(obj => obj[keys[0]]);
     }
 
-    return result;
+    return array.map((obj) => {
+      const result = {};
+
+      keys.forEach((key) => result[key] = obj[key]);
+
+      return result;
+    });
   }
 }
