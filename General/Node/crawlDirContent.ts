@@ -90,11 +90,16 @@ export default async function crawlDirContent(path: string, config: Config) {
 // Filters
 export function filterByExt(exts: StrOrStrArr) {
   return function(array: FileObject[]) {
+    let result = array;
+
     if (typeof exts === 'string') exts = [exts];
 
-    const regex = new RegExp(`^(${exts.join('|')})$`);
+    if (Array.isArray(exts) && exts.length) {
+      const regex = new RegExp(`^(?:${exts.join('|')})$`);
+      result = array.filter((obj) => regex.test(obj.ext));
+    }
 
-    return array.filter((obj) => regex.test(obj.ext));
+    return result;
   }
 }
 
@@ -102,9 +107,9 @@ export function showOnly(keys: StrOrStrArr) {
   return function(array: FileObject[]) {
     let result: StrOrFileArr = array;
 
-    if (typeof keys === 'string') {
-      result = array.map((obj) => obj[keys]);
-    } else if (Array.isArray(keys) && keys.length) {
+    if (typeof keys === 'string') keys = [keys];
+
+    if (Array.isArray(keys) && keys.length) {
       result = array.map((obj) => {
         const result = {};
 
