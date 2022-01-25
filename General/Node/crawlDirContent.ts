@@ -51,23 +51,6 @@ function format(startingPath: string, file: Dirent, includeExt = false): FileObj
   return result;
 }
 
-function filterTemplate(
-  data: StrOrStrArr,
-  singleFn: (array: FileObject[]) => StrOrFileArr,
-  manyFn: (array: FileObject[]) => StrOrFileArr,
-  array: FileObject[]
-) {
-  let result: StrOrFileArr = array;
-
-  if (typeof data === 'string') {
-    result = singleFn(array);
-  } else if (Array.isArray(data) && data.length) {
-    result = manyFn(array);
-  }
-
-  return result;
-}
-
 // |==== Exports ====|
 
 // Main
@@ -106,34 +89,33 @@ export default async function crawlDirContent(path: string, config: Config) {
 
 // Filters
 export function filterByExt(exts: StrOrStrArr) {
-  return filterTemplate.bind(null, exts, (array: FileObject[]) => {
-    return array.filter((obj) =>
-      obj.ext === exts
-    );
-  }, (array: FileObject[]) => {
-    let result = [];
+  return function(array: FileObject[]) {
+    if (typeof exts === 'string') exts = [exts];
 
-    (exts as string[]).forEach((ext) => {
-      result = [
-        ...result,
-        ...array.filter((obj) => obj.ext === ext)
-      ];
-    });
+    const regex = new RegExp(`^(${exts.join('|')})$`);
 
-    return result;
-  });
+    return array.filter((obj) => regex.test(obj.ext));
+  }
 }
 
 export function showOnly(keys: StrOrStrArr) {
-  return filterTemplate.bind(null, keys, (array: FileObject[]) => {
-    return array.map((obj) => obj[keys]);
-  }, (array: FileObject[]) => {
-    return array.map((obj) => {
-      const result = {};
+  return function(array: FileObject[]) {
+    let result: StrOrFileArr = array;
 
-      (keys as string[]).forEach((key) => result[key] = obj[key]);
+    if (typeof keys === 'string') {
+      result = array.map((obj) => obj[keys]);
+    } else if (Array.isArray(keys) && keys.length) {
+      result = array.map((obj) => {
+        const result = {};
 
-      return result;
-    });
-  });
+        (keys as string[]).forEach((key) =>
+          result[key] = obj[key]
+        );
+
+        return result;
+      });
+    }
+
+    return result;
+  }
 }
